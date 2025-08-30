@@ -382,8 +382,48 @@
         </div>
     </div>
 
-    <!-- Wert SDK -->
-    <script src="https://unpkg.com/@wert-io/widget-initializer@1.0.9/dist/index.js"></script>
+    <!-- Wert SDK - Alternative loading method -->
+    <script>
+        // Load Wert SDK dynamically to avoid ORB blocking
+        function loadWertSDK() {
+            return new Promise((resolve, reject) => {
+                if (window.WertWidget) {
+                    resolve(window.WertWidget);
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/@wert-io/widget-initializer@1.0.9/dist/index.js';
+                script.crossOrigin = 'anonymous';
+                script.onload = () => {
+                    if (window.WertWidget) {
+                        resolve(window.WertWidget);
+                    } else {
+                        reject(new Error('WertWidget not found after loading'));
+                    }
+                };
+                script.onerror = () => {
+                    // Fallback: try alternative CDN
+                    console.warn('Primary CDN failed, trying alternative...');
+                    const fallbackScript = document.createElement('script');
+                    fallbackScript.src = 'https://cdn.jsdelivr.net/npm/@wert-io/widget-initializer@1.0.9/dist/index.js';
+                    fallbackScript.crossOrigin = 'anonymous';
+                    fallbackScript.onload = () => {
+                        if (window.WertWidget) {
+                            resolve(window.WertWidget);
+                        } else {
+                            reject(new Error('WertWidget not found on fallback CDN'));
+                        }
+                    };
+                    fallbackScript.onerror = () => {
+                        reject(new Error('Failed to load Wert SDK from both CDNs'));
+                    };
+                    document.head.appendChild(fallbackScript);
+                };
+                document.head.appendChild(script);
+            });
+        }
+    </script>
     
     <script>
         // Configuration - UPDATED WITH YOUR RAILWAY URL
@@ -531,8 +571,11 @@
         }
 
         // Initialize Wert Widget
-        function initializeWidget(sessionId) {
+        async function initializeWidget(sessionId) {
             try {
+                // Ensure Wert SDK is loaded
+                const WertWidget = await loadWertSDK();
+                
                 const options = {
                     partner_id: CONFIG.PARTNER_ID,
                     session_id: sessionId,
@@ -595,7 +638,7 @@
 
             } catch (error) {
                 console.error('❌ Widget initialization error:', error);
-                throw new Error('Failed to initialize payment widget');
+                throw new Error('Failed to load or initialize payment widget: ' + error.message);
             }
         }
 

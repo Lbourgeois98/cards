@@ -1,1033 +1,354 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ShawnSweeps - Bitcoin Gaming Platform</title>
-  <meta name="description" content="Play premium casino games with Bitcoin deposits through ShawnSweeps">
-  <style>
-    /* === Reset & Base Styles === */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    body, html {
-      width: 100%;
-      min-height: 100vh;
-      overflow-x: hidden;
-      overflow-y: auto;
-      font-family: 'Arial', sans-serif;
-      color: white;
-      position: relative;
-      background: #000;
-    }
-
-    /* === Video Background === */
-    #bg-video {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      z-index: -2;
-    }
-    
-    .video-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.7));
-      z-index: -1;
-    }
-
-    /* === Header === */
-    header {
-      margin: 30px auto;
-      text-align: center;
-      z-index: 10;
-      position: relative;
-    }
-    
-    header img {
-      width: 240px;
-      max-width: 90vw;
-      filter: drop-shadow(0 0 20px rgba(250, 10, 10, 0.8));
-      transition: filter 0.3s ease;
-    }
-    
-    header img:hover {
-      filter: drop-shadow(0 0 30px rgba(250, 10, 10, 1));
-    }
-
-    /* === Deposit Section === */
-    .deposit-section {
-      max-width: 500px;
-      margin: 0 auto 50px;
-      padding: 0 20px;
-      z-index: 10;
-      position: relative;
-    }
-
-    .deposit-button {
-      background: linear-gradient(135deg, #ff0000, #cc0000, #000000);
-      background-size: 200% 200%;
-      color: white;
-      border: 2px solid transparent;
-      padding: 18px 40px;
-      font-size: 18px;
-      font-weight: bold;
-      border-radius: 15px;
-      cursor: pointer;
-      transition: all 0.4s ease;
-      box-shadow: 0 8px 25px rgba(255, 0, 0, 0.3);
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      width: 100%;
-      position: relative;
-      overflow: hidden;
-      animation: gradientShift 3s ease infinite;
-    }
-
-    @keyframes gradientShift {
-      0%, 100% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-    }
-
-    .deposit-button:hover {
-      transform: translateY(-3px) scale(1.02);
-      box-shadow: 0 12px 35px rgba(255, 0, 0, 0.5);
-      border-color: rgba(255, 255, 255, 0.3);
-    }
-
-    .deposit-button:active {
-      transform: translateY(-1px) scale(1.01);
-    }
-
-    .deposit-button:disabled {
-      background: linear-gradient(135deg, #666, #444);
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-      animation: none;
-      opacity: 0.7;
-    }
-
-    .deposit-button .button-icon {
-      margin-right: 10px;
-      font-size: 20px;
-    }
-
-    /* === Status Messages === */
-    .message {
-      margin: 15px auto;
-      padding: 15px 25px;
-      border-radius: 10px;
-      max-width: 600px;
-      text-align: center;
-      font-size: 15px;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-    
-    .error {
-      background: linear-gradient(135deg, rgba(220, 38, 38, 0.15), rgba(185, 28, 28, 0.1));
-      border: 1px solid rgba(220, 38, 38, 0.4);
-      color: #fca5a5;
-    }
-    
-    .success {
-      background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(22, 163, 74, 0.1));
-      border: 1px solid rgba(34, 197, 94, 0.4);
-      color: #86efac;
-    }
-    
-    .loading {
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.1));
-      border: 1px solid rgba(59, 130, 246, 0.4);
-      color: #93c5fd;
-      position: relative;
-    }
-    
-    .loading::after {
-      content: '';
-      display: inline-block;
-      width: 18px;
-      height: 18px;
-      margin-left: 10px;
-      border: 2px solid transparent;
-      border-top: 2px solid #93c5fd;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      vertical-align: middle;
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    
-    .hidden {
-      display: none !important;
-    }
-
-    /* === Game Grid === */
-    #games {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 30px;
-      max-width: 1400px;
-      margin: 0 auto 80px;
-      padding: 0 20px;
-      position: relative;
-      z-index: 10;
-    }
-
-    @media (max-width: 768px) {
-      #games {
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 20px;
-      }
-    }
-
-    /* === Game Cards === */
-    .game-card {
-      position: relative;
-      width: 100%;
-      padding-bottom: 100%;
-      border-radius: 50%;
-      overflow: hidden;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
-      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-      cursor: pointer;
-    }
-
-    .game-card::before {
-      content: '';
-      position: absolute;
-      inset: -4px;
-      background: linear-gradient(45deg, #ff0000, #ff8c00, #ff0000);
-      background-size: 200% 200%;
-      border-radius: 50%;
-      z-index: -1;
-      animation: borderGlow 3s ease infinite;
-      opacity: 0.8;
-    }
-
-    @keyframes borderGlow {
-      0%, 100% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-    }
-
-    .game-card img {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 50%;
-      transition: transform 0.4s ease;
-    }
-
-    .game-card:hover {
-      transform: scale(1.12) rotateZ(5deg);
-      box-shadow: 0 15px 40px rgba(250, 10, 10, 0.6);
-    }
-
-    .game-card:hover img {
-      transform: scale(1.1);
-    }
-
-    .game-card:active {
-      transform: scale(1.08) rotateZ(2deg);
-    }
-
-    /* === Production Status Indicator === */
-    .production-indicator {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: white;
-      padding: 8px 15px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: bold;
-      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-      z-index: 1000;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .production-indicator::before {
-      content: '🟢';
-      margin-right: 5px;
-    }
-
-    /* === Footer === */
-    .footer {
-      text-align: center;
-      padding: 40px 20px 20px;
-      color: rgba(255, 255, 255, 0.6);
-      font-size: 14px;
-      position: relative;
-      z-index: 10;
-    }
-
-    .footer a {
-      color: #ff6b6b;
-      text-decoration: none;
-      transition: color 0.3s ease;
-    }
-
-    .footer a:hover {
-      color: #ff5252;
-    }
-
-    /* === Responsive Adjustments === */
-    @media (max-width: 480px) {
-      header img {
-        width: 200px;
-      }
-      
-      .deposit-button {
-        font-size: 16px;
-        padding: 16px 30px;
-        letter-spacing: 1px;
-      }
-      
-      .message {
-        font-size: 14px;
-        padding: 12px 20px;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galaxy Card Organizer</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #000000, #1a1a2e);
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        .galaxy {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 80%, #ff00ff 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, #00ff00 0%, transparent 50%),
+                        radial-gradient(circle at 40% 40%, #ff00ff 0%, transparent 50%);
+            opacity: 0.1;
+            z-index: -1;
+        }
+        h1 {
+            text-align: center;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
+            font-size: 3em;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 20px #00ff00;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #00ff00;
+            color: #ffffff;
+            padding: 10px;
+            font-family: inherit;
+            resize: vertical;
+        }
+        input[type="text"] {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #00ff00;
+            color: #ffffff;
+            padding: 10px;
+            font-family: inherit;
+            margin-bottom: 10px;
+        }
+        button {
+            background: linear-gradient(45deg, #00ff00, #ff00ff);
+            border: none;
+            color: #000000;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            margin: 10px 5px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            box-shadow: 0 0 10px #00ff00;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #00ff00;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background: rgba(0, 255, 0, 0.2);
+            color: #00ff00;
+        }
+        td {
+            background: rgba(255, 0, 255, 0.1);
+        }
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .star {
+            position: absolute;
+            background: #ffffff;
+            border-radius: 50%;
+            animation: twinkle 2s infinite;
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+    </style>
 </head>
 <body>
-
-  <!-- Production Indicator -->
-  <div class="production-indicator">Live Production</div>
-
-  <!-- Video Background -->
-  <video id="bg-video"
-         src="https://shawn-sweepstakes.carrd.co/assets/videos/bg.mp4?v=0c91e9dc"
-         poster="https://shawn-sweepstakes.carrd.co/assets/videos/bg.mp4.jpg?v=0c91e9dc"
-         autoplay
-         preload="auto"
-         loop
-         playsinline
-         disablepictureinpicture
-         disableremoteplaybook
-         webkit-playsinline
-         muted>
-  </video>
-  <div class="video-overlay"></div>
-
-  <!-- Header -->
-  <header>
-    <img src="https://shawn-sweepstakes.carrd.co/assets/images/image03.png?v=0c91e9dc" 
-         alt="ShawnSweeps Logo" 
-         loading="eager">
-  </header>
-
-  <!-- Status Messages -->
-  <div id="errorMessage" class="message error hidden"></div>
-  <div id="successMessage" class="message success hidden"></div>
-  <div id="loadingMessage" class="message loading hidden">Initializing secure Bitcoin payment...</div>
-
-  <!-- Deposit Section -->
-  <section class="deposit-section">
-    <button class="deposit-button" id="depositButton">
-      <span class="button-icon">₿</span>
-      Buy Bitcoin - Instant Deposit
-    </button>
-  </section>
-
-  <!-- Games Grid -->
-  <section id="games">
-    <!-- Games will be populated by JavaScript -->
-  </section>
-
-  <!-- Footer -->
-  <footer class="footer">
-    <p>Secure Bitcoin payments powered by <a href="https://wert.io" target="_blank" rel="noopener">Wert.io</a></p>
-    <p>© 2025 ShawnSweeps. Play responsibly.</p>
-  </footer>
-
-  <!-- Wert Widget SDK -->
-  <script src="https://unpkg.com/@wert-io/widget-initializer@1.0.2/dist/index.js"></script>
-
-  <script>
-    'use strict';
-
-    // === PRODUCTION CONFIGURATION ===
-    const PRODUCTION_CONFIG = {
-      PARTNER_ID: "01K1T8VJJ8TY67M49FDXY865GF",
-      API_BASE_URL: "https://wert-bitcoin-app-production.up.railway.app",
-      FRONTEND_URL: "https://wertapp.netlify.app",
-      WALLET_ADDRESS: "39zC2iwMf6qzmVVEcBdfXG6WpVn84Mwxzv",
-      DEFAULT_AMOUNT: 100,
-      MIN_AMOUNT: 25,
-      MAX_AMOUNT: 5000,
-      CURRENCY: "USD",
-      COMMODITY: "BTC",
-      NETWORK: "bitcoin",
-      FLOW_TYPE: "simple_full_restrict",
-      DEBUG_MODE: false,
-      PRODUCTION_MODE: true
-    };
-
-    // === DOM ELEMENTS ===
-    const UI = {
-      depositButton: document.getElementById('depositButton'),
-      errorMessage: document.getElementById('errorMessage'),
-      successMessage: document.getElementById('successMessage'),
-      loadingMessage: document.getElementById('loadingMessage'),
-      gamesContainer: document.getElementById('games')
-    };
-
-    // === UTILITY FUNCTIONS ===
-    function log(message, data = null) {
-      if (!PRODUCTION_CONFIG.DEBUG_MODE) return;
-      console.log(`[ShawnSweeps] ${message}`, data || '');
-    }
-
-    function logError(message, error = null) {
-      console.error(`[ShawnSweeps Error] ${message}`, error || '');
-    }
-
-    function generateClickId() {
-      return `shawnsweeps_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    }
-
-    // === MESSAGE SYSTEM ===
-    function hideAllMessages() {
-      Object.values(UI).forEach(element => {
-        if (element && element.classList.contains('message')) {
-          element.classList.add('hidden');
-        }
-      });
-    }
-
-    function showMessage(type, message, autoHide = false) {
-      hideAllMessages();
-      const element = UI[`${type}Message`];
-      
-      if (element) {
-        element.textContent = message;
-        element.classList.remove('hidden');
-        
-        if (autoHide) {
-          setTimeout(() => element.classList.add('hidden'), 5000);
-        }
-      }
-      
-      log(`Message (${type}):`, message);
-    }
-
-    function showError(message) {
-      showMessage('error', message, true);
-      UI.depositButton.disabled = false;
-      logError('User Error:', message);
-    }
-
-    function showSuccess(message) {
-      showMessage('success', message, true);
-      UI.depositButton.disabled = false;
-      log('Success:', message);
-    }
-
-    function showLoading(message = 'Processing secure payment...') {
-      showMessage('loading', message);
-      UI.depositButton.disabled = true;
-    }
-
-    // === API FUNCTIONS ===
-    async function createWertSession() {
-      const sessionPayload = {
-        flow_type: PRODUCTION_CONFIG.FLOW_TYPE,
-        wallet_address: PRODUCTION_CONFIG.WALLET_ADDRESS,
-        currency: PRODUCTION_CONFIG.CURRENCY,
-        commodity: PRODUCTION_CONFIG.COMMODITY,
-        network: PRODUCTION_CONFIG.NETWORK,
-        currency_amount: PRODUCTION_CONFIG.DEFAULT_AMOUNT
-      };
-
-      log('Creating Wert session with payload:', { ...sessionPayload, wallet_address: 'HIDDEN' });
-
-      try {
-        const response = await fetch(`${PRODUCTION_CONFIG.API_BASE_URL}/api/create-wert-session`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Origin': PRODUCTION_CONFIG.FRONTEND_URL
-          },
-          body: JSON.stringify(sessionPayload),
-          credentials: 'omit'
-        });
-
-        const responseText = await response.text();
-        log('Raw API response:', responseText.substring(0, 200));
-
-        if (!response.ok) {
-          let errorMessage = 'Payment service unavailable';
-          
-          try {
-            const errorData = JSON.parse(responseText);
-            errorMessage = errorData.message || errorData.error || errorMessage;
-            
-            if (response.status === 401) {
-              errorMessage = 'Payment service authentication error';
-            } else if (response.status === 400) {
-              errorMessage = 'Invalid payment configuration';
-            } else if (response.status === 429) {
-              errorMessage = 'Too many payment requests. Please wait a moment.';
-            } else if (response.status >= 500) {
-              errorMessage = 'Payment service temporarily down. Please try again.';
+    <div class="galaxy"></div>
+    <div class="stars" id="stars"></div>
+    <h1>Galaxy Card Organizer</h1>
+    <div class="container">
+        <h2>Paste Your Card Info Here (Any Format Accepted - Scrapes Card Number, Exp Date, CVV)</h2>
+        <textarea id="cardInput" placeholder="Paste card info in any format. Examples:&#10;4057310603469674|331|01|26|Hanan Raihaan|...&#10;4130370502242409 CardExp: 07/2029 CardCVV: 330 Country: US ...&#10;Live|4130371203970496|032028|508|...&#10;4032160019461389|2711/346|..."></textarea>
+        <br>
+        <button onclick="processCards()">Organize Cards</button>
+        <button onclick="clearTable()">Clear Table</button>
+        <button onclick="downloadCSV()">Download as CSV</button>
+        <button onclick="downloadJSON()">Download as JSON</button>
+        <button onclick="saveToLocal()">Save to Browser</button>
+        <button onclick="loadFromLocal()">Load from Browser</button>
+        <br>
+        <input type="text" id="searchInput" placeholder="Search cards by number, exp date, or CVV..." onkeyup="showSearchResults()">
+        <div id="tableContainer">
+            <h3>All Cards</h3>
+            <div id="fullTable"></div>
+        </div>
+        <div id="searchResults"></div>
+    </div>
+    <script>
+        // Generate random stars for galaxy effect
+        function generateStars() {
+            const starsContainer = document.getElementById('stars');
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = star.style.height = Math.random() * 3 + 'px';
+                star.style.animationDelay = Math.random() * 2 + 's';
+                starsContainer.appendChild(star);
             }
-          } catch (parseError) {
-            logError('Failed to parse error response:', parseError);
-          }
-          
-          throw new Error(errorMessage);
         }
+        generateStars();
 
-        const sessionData = JSON.parse(responseText);
-        
-        if (!sessionData.session_id) {
-          throw new Error('Invalid session response - no session ID');
-        }
+        let cards = [];
 
-        log('Session created successfully:', { 
-          session_id: sessionData.session_id.substring(0, 10) + '...',
-          expires_at: sessionData.expires_at 
-        });
-
-        return sessionData;
-
-      } catch (error) {
-        if (error.name === 'TypeError' && error.message.includes('fetch')) {
-          throw new Error('Network connection failed. Please check your internet.');
-        } else if (error.name === 'AbortError') {
-          throw new Error('Request timed out. Please try again.');
-        }
-        
-        logError('Session creation failed:', error);
-        throw error;
-      }
-    }
-
-    // === WERT WIDGET INTEGRATION ===
-    async function initializeWertWidget(sessionId) {
-      return new Promise((resolve, reject) => {
-        try {
-          log('Initializing Wert widget with session:', sessionId.substring(0, 10) + '...');
-
-          if (typeof WertWidget === 'undefined') {
-            throw new Error('Payment system not loaded. Please refresh the page.');
-          }
-
-          const widgetOptions = {
-            partner_id: PRODUCTION_CONFIG.PARTNER_ID,
-            session_id: sessionId,
-            click_id: generateClickId(),
-            redirect_url: PRODUCTION_CONFIG.FRONTEND_URL,
-            theme: 'dark',
-            listeners: {
-              loaded: () => {
-                log('Wert widget loaded successfully');
-                showSuccess('💳 Payment widget ready! Complete your Bitcoin purchase.');
-                resolve();
-              },
-              
-              close: () => {
-                log('Wert widget closed by user');
-                showSuccess('Payment session ended. Check your wallet for any transactions.');
-              },
-              
-              error: (error) => {
-                logError('Wert widget error:', error);
-                showError(`Payment error: ${error?.message || 'Widget initialization failed'}`);
-                reject(error);
-              },
-              
-              'payment-status': (status) => {
-                log('Payment status update:', status);
-                
-                if (status?.status === 'completed') {
-                  showSuccess('🎉 Payment completed successfully! Bitcoin is being transferred to your wallet.');
-                } else if (status?.status === 'pending') {
-                  showSuccess('⏳ Payment processing... Please wait for confirmation.');
-                } else if (status?.status === 'failed') {
-                  showError('❌ Payment failed. Please try again or contact support.');
+        function processCards() {
+            const input = document.getElementById('cardInput').value;
+            const lines = input.split('\n');
+            lines.forEach(line => {
+                if (line.trim()) {
+                    const card = parseCardLine(line.trim());
+                    if (card.cardNumber) {
+                        // Normalize card number for comparison (remove spaces/dashes)
+                        const normalizedCard = card.cardNumber.replace(/\s|-/g, '');
+                        // Check for duplicates
+                        const isDuplicate = cards.some(existing => existing.cardNumber.replace(/\s|-/g, '') === normalizedCard);
+                        if (!isDuplicate) {
+                            cards.push(card);
+                        }
+                    }
                 }
-              }
-            }
-          };
-
-          // Create and open widget
-          const wertWidget = new WertWidget(widgetOptions);
-          wertWidget.open();
-          
-          log('Wert widget opened successfully');
-
-        } catch (error) {
-          logError('Widget initialization error:', error);
-          reject(error);
-        }
-      });
-    }
-
-    // === MAIN DEPOSIT HANDLER ===
-    async function handleBitcoinDeposit() {
-      log('Starting Bitcoin deposit process...');
-      hideAllMessages();
-      showLoading('Connecting to secure payment system...');
-
-      try {
-        // Step 1: Create session via Railway API
-        showLoading('Creating secure payment session...');
-        const sessionData = await createWertSession();
-
-        if (!sessionData?.session_id) {
-          throw new Error('Failed to create payment session');
-        }
-
-        // Step 2: Initialize Wert widget
-        showLoading('Opening Bitcoin payment widget...');
-        await initializeWertWidget(sessionData.session_id);
-
-        log('Deposit process completed successfully');
-
-      } catch (error) {
-        logError('Deposit process failed:', error);
-        showError(error.message || 'Payment initialization failed. Please try again.');
-      }
-    }
-
-    // === GAMES DATA ===
-    const GAMES_DATA = [
-      {
-        name: "Mega Spin Sweeps",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/85307f95.jpg?v=0c91e9dc",
-        url: "http://www.megaspinsweeps.com/index.html"
-      },
-      {
-        name: "VBLink777",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/753a32c3.jpg?v=0c91e9dc",
-        url: "https://www.vblink777.club/"
-      },
-      {
-        name: "Golden Treasure",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/7c9b03e5.jpg?v=0c91e9dc",
-        url: "https://www.goldentreasure.mobi/"
-      },
-      {
-        name: "Orion Stars",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/417aedb1.png?v=0c91e9dc",
-        url: "http://start.orionstars.vip:8580/index.html"
-      },
-      {
-        name: "Fire Kirin",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/189aadee.jpg?v=0c91e9dc",
-        url: "http://start.firekirin.xyz:8580/index.html"
-      },
-      {
-        name: "River Monster",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/253c9f08.jpg?v=0c91e9dc",
-        url: "https://rm777.net/"
-      },
-      {
-        name: "Riversweeps",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/597c1510.jpg?v=0c91e9dc",
-        url: "https://bet777.eu/"
-      },
-      {
-        name: "Fortune 2 Go",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/d1498abc.jpg?v=0c91e9dc",
-        url: "https://www.fortune2go20.com/mobile/Login/index.html"
-      },
-      {
-        name: "Golden Dragon",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/de5f04bc.jpg?v=0c91e9dc",
-        url: "https://playgd.mobi/SSLobby/3733.0/web-mobile/index.html"
-      },
-      {
-        name: "Blu Dragon",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/faeeb77b.png?v=0c91e9dc",
-        url: "http://app.bluedragon777.com/"
-      },
-      {
-        name: "VEGAS X",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/1e472144.jpg?v=0c91e9dc",
-        url: "https://vegas-x.org/"
-      },
-      {
-        name: "ULTRAPANDA",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/ad5dd9c6.jpg?v=0c91e9dc",
-        url: "https://www.ultrapanda.mobi/"
-      },
-      {
-        name: "MILKY WAYS",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/2bc0a981.jpg?v=0c91e9dc",
-        url: "https://milkywayapp.xyz/"
-      },
-      {
-        name: "LUCKY PENNY",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/9b984f9c.jpg?v=0c91e9dc",
-        url: "http://luckypenny.xyz:8580/index.html"
-      },
-      {
-        name: "Gametime",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/85307f95.jpg?v=0c91e9dc",
-        url: "http://game-time.vip:8580/index.html"
-      },
-      {
-        name: "Gold Star",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/74eb627d.jpg?v=0c91e9dc",
-        url: "https://goldstar.games/"
-      },
-      {
-        name: "100 Plus",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/e00a2881.jpg?v=0c91e9dc",
-        url: "https://99.100plus.me/lobby/1684487595/index.html?agreement=1&/player/release/"
-      },
-      {
-        name: "Gamevault",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/050dac4a.jpg?v=0c91e9dc",
-        url: "https://download.gamevault999.com/"
-      },
-      {
-        name: "Galaxy World",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/1f44c7e1.png?v=0c91e9dc",
-        url: "https://m.galaxyworld999.com/"
-      },
-      {
-        name: "Magic City",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/71d5fc8f.jpg?v=0c91e9dc",
-        url: "https://www.magiccity777.com/SSLobby/3657.0/web-mobile/index.html"
-      },
-      {
-        name: "High Stake Sweeps",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/e1d3a0f7.jpg?v=0c91e9dc",
-        url: "https://dl.highstakesweeps.com/"
-      },
-      {
-        name: "Sin City",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/98333b44.jpg?v=0c91e9dc",
-        url: "https://sincitysweeps.net/"
-      },
-      {
-        name: "Vegas Sweeps",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/bd38d36f.jpg?v=0c91e9dc",
-        url: "https://m.lasvegassweeps.com/"
-      },
-      {
-        name: "IGNITE",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/3603f518.png?v=0c91e9dc",
-        url: "https://casinoignite.vip/"
-      },
-      {
-        name: "Cashapp Frenzy",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/a67374ce.jpg?v=0c91e9dc",
-        url: "https://www.cashfrenzy777.com/"
-      },
-      {
-        name: "ACEBOOK",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/09e14951.jpg?v=0c91e9dc",
-        url: "https://www.playacebook.mobi/"
-      },
-      {
-        name: "Blue Dragon 2",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/637eb5ee.png?v=0c91e9dc",
-        url: "http://app.getbluedragon.com/"
-      },
-      {
-        name: "Juwa777",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/bebb5d9e.jpg?v=0c91e9dc",
-        url: "https://dl.juwa777.com/"
-      },
-      {
-        name: "Panda Master",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/0b6843e0.jpg?v=0c91e9dc",
-        url: "https://pandamaster.vip:8888/index.html"
-      },
-      {
-        name: "Fish Glory",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/346fd5a6.jpg?v=0c91e9dc",
-        url: "https://www.fishglory.games/"
-      },
-      {
-        name: "Vegas Roll",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/7867671f.jpg?v=0c91e9dc",
-        url: "http://www.vegas-roll.com/m"
-      },
-      {
-        name: "Mr All In One",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/d6f9845f.jpg?v=0c91e9dc",
-        url: "https://www.mrallinone777.com/m"
-      },
-      {
-        name: "ORION Power",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/6c415d9a.jpg?v=0c91e9dc",
-        url: "http://product.orionpower.games/v1001/"
-      },
-      {
-      {
-        name: "Quake Game",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/0c63b506.jpg?v=0c91e9dc",
-        url: "https://www.quakegame.net/"
-      },
-      {
-        name: "Vegas Luck 777",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/961ffa7e.jpg?v=0c91e9dc",
-        url: "https://start.vegasluck777.com/"
-      },
-      {
-        name: "Noble 777",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/21cf31e9.jpg?v=0c91e9dc",
-        url: "https://www.noble777.com/m"
-      },
-      {
-        name: "Cash Machine 777",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/d68e85e8.jpg?v=0c91e9dc",
-        url: "https://www.cashmachine777.com/m"
-      },
-      {
-        name: "Game Room 777",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/92bca02e.jpg?v=0c91e9dc",
-        url: "https://www.gameroom777.com/m"
-      },
-      {
-        name: "Lucky Stars",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/990e95bf.jpg?v=0c91e9dc",
-        url: "http://www.luckystars.games/m"
-      },
-      {
-        name: "Slots 88888",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/035f8253.jpg?v=0c91e9dc",
-        url: "https://www.slots88888.com/m"
-      },
-      {
-        name: "Win Star 99999",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/b48ed188.jpg?v=0c91e9dc",
-        url: "http://server.winstar99999.com:8009/m"
-      },
-      {
-        name: "Mafia 77777",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/a3830c1f.jpg?v=0c91e9dc",
-        url: "http://product.mafia77777.com/v1003/"
-      },
-      {
-        name: "YOLO 777",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/e1b31467.jpg?v=0c91e9dc",
-        url: "https://yolo777.game/"
-      },
-      {
-        name: "FPC Mobile",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/2eb63b4e.png?v=0c91e9dc",
-        url: "https://fpc-mob.com/AD/index.html"
-      },
-      {
-        name: "Winners Club 777",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/a9e0fca0.jpg?v=0c91e9dc",
-        url: "https://www.winnersclub777.com/"
-      },
-      {
-        name: "Legend Fire",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/8b67f370.jpg?v=0c91e9dc",
-        url: "https://www.legendfire.xyz/"
-      },
-      {
-        name: "Fire Link Plus",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/f592d30c.jpg?v=0c91e9dc",
-        url: "https://firelinkplus.com/"
-      },
-      {
-        name: "Black Mamba",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/b99b4435.jpg?v=0c91e9dc",
-        url: "https://blackmamba.mobi/"
-      },
-      {
-        name: "Play Orca",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/a281d47e.jpg?v=0c91e9dc",
-        url: "https://playorca.mobi/"
-      },
-      {
-        name: "Play BDD",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/fcf9c9dd.jpg?v=0c91e9dc",
-        url: "https://www.playbdd.com/"
-      },
-      {
-        name: "The Kraken",
-        image: "https://shawn-sweepstakes.carrd.co/assets/images/gallery01/f6ee4ae8.jpg?v=0c91e9dc",
-        url: "https://getthekraken.com/"
-      }
-    ];
-
-    // === RENDER GAMES ===
-    function renderGames() {
-      const fragment = document.createDocumentFragment();
-      
-      GAMES_DATA.forEach((game, index) => {
-        const gameCard = document.createElement('div');
-        gameCard.className = 'game-card';
-        gameCard.style.animationDelay = `${index * 0.1}s`;
-        
-        const gameLink = document.createElement('a');
-        gameLink.href = game.url;
-        gameLink.target = '_blank';
-        gameLink.rel = 'noopener noreferrer';
-        gameLink.setAttribute('aria-label', `Play ${game.name}`);
-        
-        const gameImage = document.createElement('img');
-        gameImage.src = game.image;
-        gameImage.alt = game.name;
-        gameImage.loading = 'lazy';
-        gameImage.onerror = function() {
-          this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkdhbWUgSW1hZ2U8L3RleHQ+PC9zdmc+';
-        };
-        
-        gameLink.appendChild(gameImage);
-        gameCard.appendChild(gameLink);
-        fragment.appendChild(gameCard);
-      });
-      
-      UI.gamesContainer.appendChild(fragment);
-      log(`Rendered ${GAMES_DATA.length} games successfully`);
-    }
-
-    // === APP INITIALIZATION ===
-    async function initializeApp() {
-      log('Initializing ShawnSweeps app in production mode...');
-      
-      try {
-        // Check if we're on the correct domain
-        if (PRODUCTION_CONFIG.PRODUCTION_MODE && !window.location.href.includes('wertapp.netlify.app')) {
-          console.warn('App running on non-production domain');
-        }
-
-        // Render games
-        renderGames();
-
-        // Add event listeners
-        UI.depositButton.addEventListener('click', handleBitcoinDeposit);
-
-        // Test API connectivity
-        setTimeout(async () => {
-          try {
-            const response = await fetch(`${PRODUCTION_CONFIG.API_BASE_URL}/health`, {
-              method: 'GET',
-              timeout: 5000
             });
-            
-            if (response.ok) {
-              log('API health check passed');
-            } else {
-              logError('API health check failed:', response.status);
+            displayTable();
+            showSearchResults();
+        }
+
+        function parseCardLine(line) {
+            let cardNumber = '';
+            let expDate = '';
+            let cvv = '';
+
+            // First, check for labeled formats
+            let labeledExp = line.match(/CardExp:\s*([^\s|]+)/i);
+            if (labeledExp) {
+                expDate = labeledExp[1].replace(/(\d{2})(\d{2})/, '$1/$2').replace(/(\d{4})/, '$1').slice(0, 7); // Normalize to MM/YY or MM/YYYY
             }
-          } catch (error) {
-            logError('API connectivity test failed:', error);
-          }
-        }, 1000);
+            let labeledCvv = line.match(/CardCVV:\s*(\d+)/i);
+            if (labeledCvv) {
+                cvv = labeledCvv[1];
+            }
 
-        log('App initialized successfully');
+            // Extract card number (longest 13-19 digits)
+            const cardNumberRegex = /\b\d{13,19}\b/g;
+            const cardMatches = line.match(cardNumberRegex);
+            if (cardMatches) {
+                cardNumber = cardMatches.reduce((a, b) => a.length > b.length ? a : b);
+            }
 
-      } catch (error) {
-        logError('App initialization failed:', error);
-        showError('Application failed to initialize. Please refresh the page.');
-      }
-    }
+            // If no labeled exp, look for patterns
+            if (!expDate) {
+                const expPatterns = [
+                    /\b(\d{2})\/(\d{4})\b/g, // MM/YYYY
+                    /\b(\d{2})\/(\d{2})\b/g, // MM/YY
+                    /\b(\d{2})\-(\d{2})\b/g, // MM-YY
+                    /\b(\d{4})\b/g, // MMYY
+                    /\b(\d{6})\b/g // MMYYCC for combined exp/cvv
+                ];
+                for (const pattern of expPatterns) {
+                    const matches = line.match(pattern);
+                    if (matches) {
+                        let match = matches[0];
+                        if (match.length === 6) {
+                            // Assume MMYYCC, split to MM/YY and CVV
+                            expDate = match.slice(0, 2) + '/' + match.slice(2, 4);
+                            if (!cvv) cvv = match.slice(4);
+                        } else if (match.length === 4) {
+                            expDate = match.slice(0, 2) + '/' + match.slice(2);
+                        } else if (match.includes('/')) {
+                            expDate = match;
+                        }
+                        break;
+                    }
+                }
+            }
 
-    // === SDK LOADING ===
-    function waitForWertSDK() {
-      return new Promise((resolve, reject) => {
-        let attempts = 0;
-        const maxAttempts = 50; // 5 seconds
-        
-        const checkSDK = setInterval(() => {
-          attempts++;
-          
-          if (typeof WertWidget !== 'undefined') {
-            clearInterval(checkSDK);
-            log('Wert SDK loaded successfully');
-            resolve();
-          } else if (attempts >= maxAttempts) {
-            clearInterval(checkSDK);
-            reject(new Error('Wert SDK failed to load'));
-          }
-        }, 100);
-      });
-    }
+            // If no labeled cvv, find 3-4 digit CVV, avoiding card and exp
+            if (!cvv) {
+                let tempLine = line.replace(cardNumber, '').replace(expDate, '');
+                const cvvPatterns = /\b(\d{3,4})\b/g;
+                const cvvMatches = tempLine.match(cvvPatterns);
+                if (cvvMatches) {
+                    cvv = cvvMatches.find(match => {
+                        // Avoid if it's part of phone or zip (simple heuristic: not after + or in long sequence)
+                        const context = line.slice(line.indexOf(match) - 5, line.indexOf(match) + match.length + 5);
+                        return !context.includes('+') && !/\d{5,}/.test(context.replace(match, ''));
+                    }) || cvvMatches[0];
+                }
+            }
 
-    // === ERROR HANDLING ===
-    window.addEventListener('error', (event) => {
-      logError('Global JavaScript error:', {
-        message: event.error?.message,
-        filename: event.filename,
-        lineno: event.lineno
-      });
-      
-      if (event.error?.message?.includes('WertWidget') || event.error?.message?.includes('widget')) {
-        showError('Payment system error. Please refresh the page and try again.');
-      }
-    });
+            // Handle pipe-separated formats assuming positions
+            if (!expDate || !cvv) {
+                const parts = line.split('|').map(p => p.trim());
+                if (parts.length > 1) {
+                    // Common: Card|CVV|MM|YY|Name|...
+                    if (!cvv && parts[1] && parts[1].match(/^\d{3,4}$/)) {
+                        cvv = parts[1];
+                    }
+                    if (!expDate && parts[2] && parts[3] && parts[2].match(/^\d{2}$/) && parts[3].match(/^\d{2}$/)) {
+                        expDate = parts[2] + '/' + parts[3];
+                    }
+                    // For MMYY|CVV
+                    if (!expDate && parts[1] && parts[1].match(/^\d{6}$/)) {
+                        expDate = parts[1].slice(0, 2) + '/' + parts[1].slice(2, 4);
+                        if (!cvv && parts[1].length === 6) cvv = parts[1].slice(4);
+                    }
+                    // For Card|ExpCvv|...
+                    if (!expDate && parts[1] && parts[1].includes('/')) {
+                        const expCvv = parts[1].split('/');
+                        if (expCvv.length === 2) {
+                            expDate = expCvv[0];
+                            if (!cvv) cvv = expCvv[1];
+                        }
+                    }
+                }
+            }
 
-    window.addEventListener('unhandledrejection', (event) => {
-      logError('Unhandled promise rejection:', event.reason);
-      
-      if (event.reason?.message?.includes('fetch') || event.reason?.message?.includes('network')) {
-        showError('Network connection error. Please check your internet and try again.');
-      }
-    });
-
-    // === PAGE LOAD HANDLER ===
-    document.addEventListener('DOMContentLoaded', async () => {
-      try {
-        log('DOM loaded, checking Wert SDK...');
-        await waitForWertSDK();
-        await initializeApp();
-      } catch (error) {
-        logError('Failed to initialize app:', error);
-        showError('Failed to load payment system. Please refresh the page.');
-      }
-    });
-
-    // === FALLBACK INITIALIZATION ===
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        if (typeof WertWidget === 'undefined') {
-          logError('Wert SDK still not available after page load');
-          showError('Payment system unavailable. Please refresh the page.');
+            return { cardNumber, expDate, cvv };
         }
-      }, 3000);
-    });
 
-    // === PRODUCTION OPTIMIZATIONS ===
-    if (PRODUCTION_CONFIG.PRODUCTION_MODE) {
-      // Disable console logs in production (except errors)
-      if (!PRODUCTION_CONFIG.DEBUG_MODE) {
-        console.log = () => {};
-        console.info = () => {};
-        console.warn = () => {};
-      }
-
-      // Add performance monitoring
-      window.addEventListener('load', () => {
-        if ('performance' in window) {
-          const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
-          console.info(`Page load time: ${loadTime}ms`);
+        function displayTable() {
+            const container = document.getElementById('fullTable');
+            if (cards.length === 0) {
+                container.innerHTML = '<p>No cards to display.</p>';
+                return;
+            }
+            let table = '<table><thead><tr><th>Card Number</th><th>Exp Date</th><th>CVV</th></tr></thead><tbody>';
+            cards.forEach(card => {
+                table += `<tr><td>${card.cardNumber || 'N/A'}</td><td>${card.expDate || 'N/A'}</td><td>${card.cvv || 'N/A'}</td></tr>`;
+            });
+            table += '</tbody></table>';
+            container.innerHTML = table;
         }
-      });
-    }
 
-  </script>
+        function showSearchResults() {
+            const filter = document.getElementById('searchInput').value.toLowerCase();
+            const resultsContainer = document.getElementById('searchResults');
+            if (!filter) {
+                resultsContainer.innerHTML = '';
+                return;
+            }
+            const filteredCards = cards.filter(card => {
+                return card.cardNumber.toLowerCase().includes(filter) ||
+                       card.expDate.toLowerCase().includes(filter) ||
+                       card.cvv.toLowerCase().includes(filter);
+            });
+            if (filteredCards.length === 0) {
+                resultsContainer.innerHTML = '<h3>Search Results</h3><p>No matching cards found.</p>';
+            } else {
+                let table = '<h3>Search Results</h3><table><thead><tr><th>Card Number</th><th>Exp Date</th><th>CVV</th></tr></thead><tbody>';
+                filteredCards.forEach(card => {
+                    table += `<tr><td>${card.cardNumber || 'N/A'}</td><td>${card.expDate || 'N/A'}</td><td>${card.cvv || 'N/A'}</td></tr>`;
+                });
+                table += '</tbody></table>';
+                resultsContainer.innerHTML = table;
+            }
+        }
+
+        function clearTable() {
+            cards = [];
+            document.getElementById('fullTable').innerHTML = '';
+            document.getElementById('cardInput').value = '';
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchResults').innerHTML = '';
+        }
+
+        function downloadCSV() {
+            if (cards.length === 0) return;
+            let csv = 'Card Number,Exp Date,CVV\n';
+            cards.forEach(card => {
+                csv += `${card.cardNumber},${card.expDate},${card.cvv}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'cards.csv';
+            a.click();
+        }
+
+        function downloadJSON() {
+            if (cards.length === 0) return;
+            const json = JSON.stringify(cards, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            a.href = url;
+            a.download = 'cards.json';
+            a.click();
+        }
+
+        function saveToLocal() {
+            localStorage.setItem('galaxyCards', JSON.stringify(cards));
+            alert('Cards saved to browser storage.');
+        }
+
+        function loadFromLocal() {
+            const saved = localStorage.getItem('galaxyCards');
+            if (saved) {
+                cards = JSON.parse(saved);
+                displayTable();
+                showSearchResults();
+                alert('Cards loaded from browser storage.');
+            } else {
+                alert('No saved cards found.');
+            }
+        }
+    </script>
 </body>
 </html>

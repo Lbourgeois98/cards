@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Card Organizer</title>
+    <title>Galaxy Card Organizer</title>
     <style>
         body {
             background: linear-gradient(135deg, #000000, #1a1a2e);
             color: #ffffff;
             font-family: 'Courier New', monospace;
             margin: 0;
-            padding: 20px;
+            padding: 10px; /* Reduced padding for mobile */
             overflow-x: hidden;
         }
         .galaxy {
@@ -29,25 +29,36 @@
             text-align: center;
             color: #00ff00;
             text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
-            font-size: 3em;
+            font-size: 2em; /* Smaller for mobile */
+            margin: 10px 0;
+        }
+        h2 {
+            font-size: 1.2em; /* Adjusted for mobile */
+            margin: 10px 0;
+        }
+        h3 {
+            font-size: 1.1em; /* Adjusted for mobile */
+            margin: 10px 0;
         }
         .container {
-            max-width: 1200px;
+            max-width: 100%; /* Full width on mobile */
             margin: 0 auto;
             background: rgba(0, 0, 0, 0.7);
             border-radius: 10px;
-            padding: 20px;
+            padding: 15px; /* Reduced padding */
             box-shadow: 0 0 20px #00ff00;
         }
         textarea {
             width: 100%;
-            height: 200px;
+            height: 150px; /* Smaller height for mobile */
             background: rgba(255, 255, 255, 0.1);
             border: 2px solid #00ff00;
             color: #ffffff;
             padding: 10px;
             font-family: inherit;
+            font-size: 14px; /* Added for readability */
             resize: vertical;
+            box-sizing: border-box; /* Include padding in width */
         }
         input[type="text"] {
             width: 100%;
@@ -56,35 +67,51 @@
             color: #ffffff;
             padding: 10px;
             font-family: inherit;
+            font-size: 14px;
             margin-bottom: 10px;
+            box-sizing: border-box;
         }
         button {
             background: linear-gradient(45deg, #00ff00, #ff00ff);
             border: none;
             color: #000000;
-            padding: 10px 20px;
+            padding: 12px 20px; /* Larger padding for touch */
             font-size: 1em;
             cursor: pointer;
             margin: 10px 5px;
             border-radius: 5px;
             transition: all 0.3s;
+            min-width: 120px; /* Ensure buttons are wide enough */
+            display: inline-block; /* Prevent stacking */
         }
         button:hover {
             box-shadow: 0 0 10px #00ff00;
+        }
+        .button-row {
+            display: flex;
+            flex-wrap: wrap; /* Wrap on small screens */
+            justify-content: center;
+            gap: 10px; /* Space between buttons */
+            margin: 20px 0;
         }
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            font-size: 14px; /* Smaller font for mobile */
+            overflow-x: auto; /* Allow horizontal scroll if needed */
+            display: block; /* For mobile scrolling */
         }
         th, td {
             border: 1px solid #00ff00;
-            padding: 10px;
+            padding: 8px; /* Reduced padding */
             text-align: left;
+            white-space: nowrap; /* Prevent text wrap in cells */
         }
         th {
             background: rgba(0, 255, 0, 0.2);
             color: #00ff00;
+            font-weight: bold;
         }
         td {
             background: rgba(255, 0, 255, 0.1);
@@ -107,22 +134,52 @@
             0%, 100% { opacity: 0; }
             50% { opacity: 1; }
         }
+        /* Mobile-specific styles */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+            .container {
+                padding: 10px;
+            }
+            button {
+                font-size: 0.9em;
+                padding: 10px 15px;
+                min-width: 100px;
+            }
+            .button-row {
+                flex-direction: column; /* Stack buttons vertically on very small screens */
+                align-items: center;
+            }
+            table {
+                font-size: 12px; /* Even smaller on mobile */
+            }
+            th, td {
+                padding: 5px; /* Tighter padding */
+            }
+        }
+        /* Ensure touch targets are at least 44px */
+        button, input, textarea {
+            min-height: 44px; /* For touch accessibility */
+        }
     </style>
 </head>
 <body>
     <div class="galaxy"></div>
     <div class="stars" id="stars"></div>
-    <h1>Card Organizer</h1>
+    <h1>Galaxy Card Organizer</h1>
     <div class="container">
         <h2>Paste Your Card Info Here (Any Format Accepted - Scrapes Card Number, Exp Date, CVV)</h2>
         <textarea id="cardInput" placeholder="Paste card info in any format. Examples:&#10;4057310603469674|331|01|26|Hanan Raihaan|...&#10;4130370502242409 CardExp: 07/2029 CardCVV: 330 Country: US ...&#10;Live|4130371203970496|032028|508|...&#10;4032160019461389|2711/346|..."></textarea>
         <br>
-        <button onclick="processCards()">Organize Cards</button>
-        <button onclick="clearTable()">Clear Table</button>
-        <button onclick="downloadCSV()">Download as CSV</button>
-        <button onclick="downloadJSON()">Download as JSON</button>
-        <button onclick="saveToLocal()">Save to Browser</button>
-        <button onclick="loadFromLocal()">Load from Browser</button>
+        <div class="button-row">
+            <button onclick="processCards()">Organize Cards</button>
+            <button onclick="clearTable()">Clear Table</button>
+            <button onclick="downloadCSV()">Download as CSV</button>
+            <button onclick="downloadJSON()">Download as JSON</button>
+            <button onclick="saveToLocal()">Save to Browser</button>
+            <button onclick="loadFromLocal()">Load from Browser</button>
+        </div>
         <br>
         <input type="text" id="searchInput" placeholder="Search cards by number, exp date, or CVV..." onkeyup="showSearchResults()">
         <div id="tableContainer">
@@ -328,6 +385,7 @@
             const json = JSON.stringify(cards, null, 2);
             const blob = new Blob([json], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
             a.href = url;
             a.download = 'cards.json';
             a.click();

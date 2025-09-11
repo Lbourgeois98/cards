@@ -30,14 +30,26 @@ export default function Home() {
     <div className="container">
       <h1>🔥 Exploited Darknet Card Validator 🔥</h1>
       <p>Paste cards: Live|number|cvv|mm|yy|</p>
-      <textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder="Paste here..." />
+      <textarea 
+        id="cardInput" 
+        name="cardInput" 
+        value={input} 
+        onChange={(e) => setInput(e.target.value)} 
+        placeholder="Paste here..." 
+      />
       <br />
       <label>
-        <input type="checkbox" checked={fullCheck} onChange={(e) => setFullCheck(e.target.checked)} />
+        <input 
+          type="checkbox" 
+          id="fullCheck" 
+          name="fullCheck" 
+          checked={fullCheck} 
+          onChange={(e) => setFullCheck(e.target.checked)} 
+        />
         Enable real full exploited check
       </label>
       <br />
-      <button onClick={handleValidate}>Validate All</button>
+      <button id="validateBtn" name="validateBtn" onClick={handleValidate}>Validate All</button>
       <pre>{results}</pre>
     </div>
   );
